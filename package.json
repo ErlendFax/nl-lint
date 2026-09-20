@@ -1,0 +1,42 @@
+{
+  "name": "nl-lint",
+  "version": "0.1.0",
+  "description": "Lint source code with rules written in natural language",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ErlendFax/nl-lint.git"
+  },
+  "homepage": "https://github.com/ErlendFax/nl-lint#readme",
+  "bugs": {
+    "url": "https://github.com/ErlendFax/nl-lint/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.mjs"
+    }
+  },
+  "bin": {
+    "nl-lint": "./src/cli.mjs"
+  },
+  "files": [
+    "src",
+    "examples/nl-lint.config.mjs"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc --project tsconfig.json",
+    "test:package": "node scripts/check-package.mjs",
+    "check": "npm run typecheck && npm test && npm run test:package",
+    "check:live": "node scripts/check-live.mjs",
+    "prepublishOnly": "npm run check"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

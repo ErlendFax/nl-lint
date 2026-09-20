@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+*.tgz
+.env*
+.DS_Store
+/AGENTS.md
