@@ -1,6 +1,6 @@
 # NL Lint
 
-Lint source code with rules written in natural language. Available as a CLI and JavaScript API.
+Use natural language to lint source code. Available as a CLI and JavaScript API.
 
 Node.js 22+, ESM, no runtime dependencies. The CLI selects JavaScript and TypeScript files; folder scans and Git diffs require Git. The API accepts any source string.
 
@@ -17,9 +17,10 @@ Create `nl-lint.config.mjs` in your project root:
 ```js
 export default {
   rules: {
-    useful_comments: 'Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives.',
+    useful_comments:
+      "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives.",
   },
-}
+};
 ```
 
 Or copy the installed example and edit it:
@@ -97,7 +98,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
       - run: npm ci
       - run: npm run lint:nl
@@ -110,20 +111,21 @@ For diff-based CI, fetch the intended base commit and pass it as `--diff=<base-s
 ## API
 
 ```js
-import { lintSource } from 'nl-lint'
+import { lintSource } from "nl-lint";
 
 const report = await lintSource({
-  file: 'src/example.ts',
-  source: '// Increment count\ncount++',
+  file: "src/example.ts",
+  source: "// Increment count\ncount++",
   threshold: 0.8,
   rules: {
-    comments: 'Comments in `source` must add useful information rather than restating adjacent code.',
+    comments:
+      "Comments in `source` must add useful information rather than restating adjacent code.",
   },
-})
+});
 
-console.log(report.passed)
+console.log(report.passed);
 for (const result of report.results) {
-  console.log(result.id, result.failed, result.choice, result.probabilities)
+  console.log(result.id, result.failed, result.choice, result.probabilities);
 }
 ```
 

@@ -1,7 +1,7 @@
 {
   "name": "nl-lint",
   "version": "0.1.0",
-  "description": "Lint source code with rules written in natural language",
+  "description": "Use natural language to lint source code",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ErlendFax/nl-lint.git"
