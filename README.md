@@ -1,4 +1,4 @@
-# NL Lint
+# nl-lint
 
 Use natural language to lint source code. Available as a CLI and JavaScript API.
 
@@ -35,7 +35,7 @@ No rules are enabled automatically. Get an API key from the [TypeSafe dashboard]
 export TYPESAFE_API_KEY='your-key'
 ```
 
-NL Lint does not automatically load `.env` files. Uncached source files and rules are sent to TypeSafe. Add `.cache/nl-lint/` to your project's `.gitignore`.
+nl-lint does not automatically load `.env` files. Uncached source files and rules are sent to TypeSafe. Add `.cache/nl-lint/` to your project's `.gitignore`.
 
 Add this script to your existing `package.json`:
 
@@ -133,7 +133,7 @@ Each result contains `id`, `title`, `message`, `failed`, `threshold`, `choice`, 
 
 ## How it works
 
-NL Lint currently uses TypeSafe's Jev API. Jev is a [System One Model](https://typesafe.ai/blog/introducing-system-one-models-and-jev) designed for fast classification. It returns probabilities for each rule's outcomes, which NL Lint compares with your failure threshold. Unchanged inputs can reuse cached results.
+nl-lint currently uses TypeSafe's Jev API. Jev is a [System One Model](https://typesafe.ai/blog/introducing-system-one-models-and-jev) designed for fast classification. It returns probabilities for each rule's outcomes, which nl-lint compares with your failure threshold. Unchanged inputs can reuse cached results.
 
 ## Failure semantics
 
