@@ -17,7 +17,7 @@ const npm = (args, cwd) => process.env.npm_execpath
 try {
   const [packed] = JSON.parse(npm(['pack', '--json', '--pack-destination', temporary], root))
   const expected = ['LICENSE', 'README.md', 'package.json', 'examples/nl-lint.config.mjs',
-    'src/cache.mjs', 'src/cli.mjs', 'src/config.mjs', 'src/files.mjs', 'src/index.d.ts', 'src/index.mjs']
+    'src/cache.mjs', 'src/cli.mjs', 'src/config.mjs', 'src/files.mjs', 'src/index.d.ts', 'src/index.mjs', 'src/init.mjs']
   assert.deepEqual(packed.files.map(file => file.path).sort(), expected.sort())
   await mkdir(consumer)
   await writeFile(join(consumer, 'package.json'), JSON.stringify({ name: 'nl-lint-consumer', private: true, type: 'module' }))
@@ -29,7 +29,10 @@ try {
   assert.match(await readFile(join(installed, 'LICENSE'), 'utf8'), /MIT License/)
   assert.equal(run(process.execPath, [join(installed, metadata.bin['nl-lint']), '--version']).trim(), `nl-lint ${metadata.version}`)
   assert.match(npm(['exec', '--no', '--', 'nl-lint', '--help']), /Usage: nl-lint/)
-  await cp(join(installed, 'examples/nl-lint.config.mjs'), join(consumer, 'nl-lint.config.mjs'))
+  assert.match(npm(['exec', '--no', '--', 'nl-lint', 'init']), /Ready\./)
+  const initializedPackage = JSON.parse(await readFile(join(consumer, 'package.json'), 'utf8'))
+  assert.equal(initializedPackage.scripts['lint:nl'], 'nl-lint src')
+  assert.equal(await readFile(join(consumer, '.gitignore'), 'utf8'), '.cache/nl-lint/\n')
   await writeFile(join(consumer, 'consumer.mjs'), `
     import assert from 'node:assert/strict'
     import { lintSource, defaults, defaultCriteria } from 'nl-lint'

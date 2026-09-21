@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { collectFiles } from './files.mjs'
 import { prepareConfig } from './config.mjs'
 import { lintSource } from './index.mjs'
+import { initialize } from './init.mjs'
 
 async function findConfig(explicit) {
   let directory = process.cwd()
@@ -28,12 +29,17 @@ const needsReview = result => !result.failed && result.choice !== 'pass'
 async function main() {
   const args = process.argv.slice(2)
   if (!args.length || args.includes('--help')) {
-    console.log('Usage: nl-lint <file/folder> [...] | --diff[=ref]\nOptions: --config path (otherwise nearest ancestor nl-lint.config.mjs), --json, --verbose, --refresh, --no-cache, --version\nCLI selects JS/TS source. Folder scans and --diff require Git.\nExit: 0 threshold passed (may need review), 1 rule failure, 2 operational/config error.\nUncached source files are sent to TypeSafe. Set TYPESAFE_API_KEY.')
+    console.log('Usage: nl-lint init | <file/folder> [...] | --diff[=ref]\nOptions: --config path (otherwise nearest ancestor nl-lint.config.mjs), --json, --verbose, --refresh, --no-cache, --version\ninit installs and configures nl-lint in the current npm project.\nCLI selects JS/TS source. Folder scans and --diff require Git.\nExit: 0 threshold passed (may need review), 1 rule failure, 2 operational/config error.\nUncached source files are sent to TypeSafe. Set TYPESAFE_API_KEY.')
     return
   }
   if (args.length === 1 && args[0] === '--version') {
     const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
     console.log(`nl-lint ${version}`)
+    return
+  }
+  if (args[0] === 'init') {
+    if (args.length !== 1) throw new Error('init takes no arguments.')
+    await initialize()
     return
   }
   let configPath

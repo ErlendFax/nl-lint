@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdir, mkdtemp, readdir, symlink, writeFile, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, symlink, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -158,6 +158,59 @@ test('CLI reports version, arguments, and missing config without internal errors
     assert.match(explicit.stderr, /Config not found.*absent.mjs/)
     await writeFile(join(cwd, 'nl-lint.config.mjs'), "import './missing-dependency.mjs'; export default {}")
     assert.match(run('example.ts').stderr, /missing-dependency.mjs/)
+  } finally { await rm(cwd, { recursive: true, force: true }) }
+})
+
+test('CLI init installs and creates project setup while preserving existing files', async () => {
+  const cwd = await mkdtemp(join(tmpdir(), 'nl-lint-init-'))
+  const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const run = (...args) => spawnSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8' })
+  try {
+    await writeFile(join(cwd, 'package.json'), JSON.stringify({
+      name: 'consumer',
+      dependencies: { 'nl-lint': '0.1.0' },
+      scripts: { test: 'node --test' },
+    }, null, 2))
+    await writeFile(join(cwd, '.gitignore'), 'dist/\n')
+
+    const first = run('init')
+    assert.equal(first.status, 0, first.stderr)
+    const pkg = JSON.parse(await readFile(join(cwd, 'package.json'), 'utf8'))
+    assert.equal(pkg.scripts.test, 'node --test')
+    assert.equal(pkg.scripts['lint:nl'], 'nl-lint src')
+    assert.match(await readFile(join(cwd, 'nl-lint.config.mjs'), 'utf8'), /useful_comments/)
+    assert.equal(await readFile(join(cwd, '.gitignore'), 'utf8'), 'dist/\n.cache/nl-lint/\n')
+
+    const config = 'export default { rules: { custom: "Keep me" } }\n'
+    await writeFile(join(cwd, 'nl-lint.config.mjs'), config)
+    const second = run('init')
+    assert.equal(second.status, 0, second.stderr)
+    assert.equal(await readFile(join(cwd, 'nl-lint.config.mjs'), 'utf8'), config)
+    assert.equal(await readFile(join(cwd, '.gitignore'), 'utf8'), 'dist/\n.cache/nl-lint/\n')
+    assert.match(second.stdout, /Kept existing scripts\.lint:nl/)
+    assert.match(second.stdout, /Kept existing nl-lint\.config\.mjs/)
+
+    const fresh = join(cwd, 'fresh')
+    const fakeNpm = join(cwd, 'fake-npm.mjs')
+    await mkdir(fresh)
+    await writeFile(join(fresh, 'package.json'), '{"name":"fresh-consumer"}\n')
+    await writeFile(fakeNpm, `
+      import { readFileSync, writeFileSync } from 'node:fs'
+      if (process.argv[2] !== 'install' || process.argv[3] !== '--save-dev' || !process.argv[4].startsWith('nl-lint@')) process.exit(2)
+      const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
+      pkg.devDependencies = { 'nl-lint': process.argv[4].slice('nl-lint@'.length) }
+      writeFileSync('package.json', JSON.stringify(pkg))
+    `)
+    const installed = spawnSync(process.execPath, [cli, 'init'], {
+      cwd: fresh,
+      encoding: 'utf8',
+      env: { ...process.env, npm_execpath: fakeNpm },
+    })
+    assert.equal(installed.status, 0, installed.stderr)
+    const freshPackage = JSON.parse(await readFile(join(fresh, 'package.json'), 'utf8'))
+    assert.equal(freshPackage.devDependencies['nl-lint'], version)
+    assert.equal(freshPackage.scripts['lint:nl'], 'nl-lint src')
+    assert.ok(installed.stdout.includes(`Installing nl-lint@${version} as a dev dependency`))
   } finally { await rm(cwd, { recursive: true, force: true }) }
 })
 

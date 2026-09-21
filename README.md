@@ -6,13 +6,15 @@ Node.js 22+, ESM, no runtime dependencies. The CLI selects JavaScript and TypeSc
 
 ## Quickstart
 
-Install the package in your project:
+Initialize nl-lint from your project root:
 
 ```sh
-npm install --save-dev nl-lint
+npx nl-lint init
 ```
 
-Create `nl-lint.config.mjs` in your project root:
+This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`. Existing config and script entries are preserved, so the command is safe to rerun.
+
+Edit the generated rules:
 
 ```js
 export default {
@@ -23,21 +25,22 @@ export default {
 };
 ```
 
-Or copy the installed example and edit it:
+For manual setup, install the package and copy the example:
 
 ```sh
+npm install --save-dev nl-lint
 cp node_modules/nl-lint/examples/nl-lint.config.mjs nl-lint.config.mjs
 ```
 
-No rules are enabled automatically. Get an API key from the [TypeSafe dashboard](https://console.typesafe.ai/keys), then export it in your shell:
+Only rules in your config are enabled; `init` starts it with the example rule above. Get an API key from the [TypeSafe dashboard](https://console.typesafe.ai/keys), then export it in your shell:
 
 ```sh
 export TYPESAFE_API_KEY='your-key'
 ```
 
-nl-lint does not automatically load `.env` files. Uncached source files and rules are sent to TypeSafe. Add `.cache/nl-lint/` to your project's `.gitignore`.
+nl-lint does not automatically load `.env` files. Uncached source files and rules are sent to TypeSafe. For manual setup, add `.cache/nl-lint/` to your project's `.gitignore`.
 
-Add this script to your existing `package.json`:
+For manual setup, also add this script to your existing `package.json`:
 
 ```json
 {
