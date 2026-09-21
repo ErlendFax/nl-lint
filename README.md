@@ -2,7 +2,7 @@
 
 Near-instant natural-language lint for your code.
 
-https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c
+[![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
 
 Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code:
 
