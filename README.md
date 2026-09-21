@@ -1,8 +1,18 @@
 # nl-lint
 
-Use natural language to lint source code. Available as a CLI and JavaScript API.
+Near-instant natural-language lint for your code.
 
-Node.js 22+, ESM, no runtime dependencies. The CLI selects JavaScript and TypeScript files; folder scans and Git diffs require Git. The API accepts any source string.
+Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code.
+
+```text
+Before I merge this PR:
+
+• Is this diff bloated?
+• Is this component hard to read?
+• Are the comments useful?
+```
+
+nl-lint is a Node.js 22+ package with no runtime dependencies using external decision AI ([Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) for natural-language rule evaluation.
 
 ## Quickstart
 
@@ -12,7 +22,7 @@ Initialize nl-lint from your project root:
 npx nl-lint init
 ```
 
-This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`. Existing config and script entries are preserved, so the command is safe to rerun.
+This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`.
 
 Edit the generated rules:
 
