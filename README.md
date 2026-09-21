@@ -4,11 +4,11 @@ Near-instant natural-language lint for your code.
 
 [![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
 
-_The rule used in the video above is: "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives."_
+_The rule used in the video above is: "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses, and tool directives."_
 
 ## Why
 
-We are all going hands off more and more. This is a tool in a the AI guardrail toolbox.
+We are all becoming increasingly hands-off. This is a tool in the AI guardrail toolbox.
 
 Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code:
 
@@ -16,7 +16,7 @@ Sometimes, mechanical lint rules cannot answer the questions you need to ask abo
 - Is this component hard to read?
 - Are the comments useful?
 
-nl-lint is a Node.js 22+ package with no runtime dependencies using external decision AI ([Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) for natural-language rule evaluation.
+nl-lint is a Node.js 22+ package with no runtime dependencies. It uses external decision AI ([Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) to evaluate natural-language rules.
 
 ## Quickstart
 
@@ -32,7 +32,7 @@ npx nl-lint@latest init
 export default {
   rules: {
     useful_comments:
-      "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives.",
+      "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses, and tool directives.",
   },
 };
 ```
@@ -42,7 +42,6 @@ export default {
 ```sh
 export TYPESAFE_API_KEY='your-key'
 ```
-
 
 4. Run it from your project:
 
@@ -75,7 +74,7 @@ The CLI looks for the nearest `nl-lint.config.mjs`, starting in the working dire
 
 Files are processed sequentially. Interactive terminals show progress on stderr; `--verbose` also enables progress when redirected. `--json` suppresses progress and prints one JSON report after successful evaluation. Operational errors go to stderr without a partial success report.
 
-Exit codes: **0** means no failure threshold was reached (review may still be needed), **1** means at least one rule failed, **2** means a configuration, file, Git or service error. JSON output has the shape `{ passed, files }`, including when rule failures produce exit 1.
+Exit codes: **0** means no failure threshold was reached (review may still be needed), **1** means at least one rule failed, and **2** means a configuration, file, Git, or service error occurred. JSON output has the shape `{ passed, files }`, including when rule failures produce exit 1.
 
 ## CI
 
@@ -126,7 +125,7 @@ for (const result of report.results) {
 }
 ```
 
-Each result contains `id`, `title`, `message`, `failed`, `threshold`, `choice`, and the probabilities for `violation`, `pass`, and `insufficient_context`. API `confidence` is preserved when present. Reports include the actual model, cache status and token usage when available. Messages are authored by the rule, not generated explanations. No line numbers or automatic fixes are inferred.
+Each result contains `id`, `title`, `message`, `failed`, `threshold`, `choice`, and the probabilities for `violation`, `pass`, and `insufficient_context`. API `confidence` is preserved when present. Reports include the actual model, cache status, and token usage when available. Messages are authored by the rule; they are not generated explanations. No line numbers or automatic fixes are inferred.
 
 ## How it works
 
@@ -138,7 +137,7 @@ A rule fails when **`probabilities.violation >= threshold`**, including equality
 
 This comparison uses the violation probability, not the selected choice or the API's separate confidence field. With a low threshold, a rule can fail even when another choice has the highest probability. All original choices remain in the report. `passed` means the configured failure policy passed, not that the model proved the code correct. Insufficient context below the failure threshold is shown as `REVIEW` in the CLI. A violation below threshold is also shown for review.
 
-The 0.8 default is an initial policy choice, **not a calibrated accuracy guarantee**. Tune rules and thresholds against representative labeled examples. Model errors, missing context and service errors are different: service/malformed-response errors throw instead of passing.
+The 0.8 default is an initial policy choice, **not a calibrated accuracy guarantee**. Tune rules and thresholds against representative labeled examples. Model errors, missing context, and service errors are distinct: service errors and malformed responses throw instead of passing.
 
 ## Rules and defaults
 
@@ -153,7 +152,7 @@ Other options: `model` (default `TYPESAFE_MODEL` or pinned `jev-1.13.0`), `apiKe
 
 ## Scope and cache
 
-One request per complete source file, with all rules asked together. Imports and external CSS are not loaded automatically. The API accepts any source string; CLI discovery selects JS/TS files, skips declarations, symlinks and common build/dependency folders, and deduplicates overlapping inputs. Folders must belong to a Git repository; tracked and nonignored untracked files are included.
+nl-lint makes one request per complete source file, with all rules evaluated together. Imports and external CSS are not loaded automatically. The API accepts any source string; CLI discovery selects JS/TS files, skips declarations, symlinks, and common build/dependency folders, and deduplicates overlapping inputs. Folders must belong to a Git repository; tracked and nonignored untracked files are included.
 
 Explicit file arguments must be regular `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, or `.cts` source files. Unsupported files, declarations, files in excluded folders, and explicit symlink paths cause exit 2 with a descriptive error before any file is evaluated, including when mixed with valid inputs. Folder and Git-diff discovery continue to skip unsupported and excluded files.
 
