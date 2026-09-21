@@ -329,6 +329,7 @@ test('init respects project package managers, including ancestor workspace hints
     const bin = join(cwd, 'bin')
     await mkdir(launched)
     await mkdir(bin)
+    await writeFile(join(bin, 'package.json'), '{"type":"module"}')
     await writeFile(join(launched, 'package.json'), '{"packageManager":"pnpm@11.24.0"}')
     await writeFile(join(bin, 'pnpm'), `#!${process.execPath}\n${await readFile(fakeManager, 'utf8')}`)
     await chmod(join(bin, 'pnpm'), 0o755)
