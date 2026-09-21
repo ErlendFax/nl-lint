@@ -2,9 +2,11 @@
 
 Near-instant natural-language lint for your code.
 
-**Rule:** Are the comments useful?
+A another tool in a the AI guardrail toolbox.
 
 [![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
+
+_The rule used in the video above is: "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives."_
 
 Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code:
 
@@ -16,15 +18,13 @@ nl-lint is a Node.js 22+ package with no runtime dependencies using external dec
 
 ## Quickstart
 
-Initialize nl-lint from your project root (with an existing `package.json`):
+1. Initialize nl-lint from your project root:
 
 ```sh
 npx nl-lint@latest init
 ```
 
-This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`.
-
-Edit the generated rules:
+2. Edit the generated rules:
 
 ```js
 export default {
@@ -35,40 +35,18 @@ export default {
 };
 ```
 
-For manual setup, install the package and copy the example:
-
-```sh
-npm install --save-dev nl-lint
-cp node_modules/nl-lint/examples/nl-lint.config.mjs nl-lint.config.mjs
-```
-
-In a pnpm project, use `pnpm add -D nl-lint@latest` instead of `npm install`. Use your project's package manager consistently.
-
-Only rules in your config are enabled; `init` starts it with the example rule above. Get an API key from the [TypeSafe dashboard](https://console.typesafe.ai/keys), then export it in your shell:
+3. Get an API key from the [TypeSafe dashboard](https://console.typesafe.ai/keys), then export it in your shell:
 
 ```sh
 export TYPESAFE_API_KEY='your-key'
 ```
 
-nl-lint does not automatically load `.env` files. Uncached source files and rules are sent to TypeSafe. For manual setup, add `.cache/nl-lint/` to your project's `.gitignore`.
 
-For manual setup, also add this script to your existing `package.json`:
-
-```json
-{
-  "scripts": {
-    "lint:nl": "nl-lint src"
-  }
-}
-```
-
-Run it from your project:
+4. Run it from your project:
 
 ```sh
 npm run lint:nl
 ```
-
-For pnpm, use `pnpm run lint:nl` (likewise `yarn run` or `bun run`). The generated script targets `src`; change it to your source folder or individual JS/TS files. Folder scans require a Git repository.
 
 Example output for a passing file:
 
@@ -78,12 +56,6 @@ PASS src/example.ts
 ```
 
 `FAIL` means a rule reached its failure threshold. `REVIEW` means the model selected a violation below that threshold or lacked enough context. Review results are counted separately and can still exit 0. Use `--verbose` to inspect each rule's probabilities.
-
-## Setup troubleshooting
-
-If `init` reports “No nl-lint.config.mjs found”, check `npx nl-lint --version` and rerun `npx nl-lint@latest init`. Older CLI versions can interpret `init` as a file to lint.
-
-If `npm install` fails with `Cannot read properties of null (reading 'matches')`, check whether the project uses pnpm. npm can fail while traversing an existing pnpm dependency tree. For pnpm projects, use `pnpm add -D nl-lint@latest` followed by `pnpm exec nl-lint init`. This is an installer failure before nl-lint runs; creating a config does not fix it.
 
 ## CLI
 
