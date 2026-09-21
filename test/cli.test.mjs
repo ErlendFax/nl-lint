@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, readdir, symlink, writeFile, rm } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, readdir, symlink, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -282,5 +282,76 @@ test('CLI gives one actionable Git error outside a repository', async () => {
       assert.equal(result.stderr.trim().split('\n').length, 1)
       assert.doesNotMatch(result.stderr, /fatal:|Command failed:/)
     }
+  } finally { await rm(cwd, { recursive: true, force: true }) }
+})
+
+test('init respects project package managers, including ancestor workspace hints', async () => {
+  const cwd = await mkdtemp(join(tmpdir(), 'nl-lint-managers-'))
+  try {
+    const fakeManager = join(cwd, 'manager.mjs')
+    await writeFile(fakeManager, `
+      import { readFileSync, writeFileSync } from 'node:fs'
+      const args = process.argv.slice(2)
+      writeFileSync('install-args.json', JSON.stringify(args))
+      const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
+      pkg.devDependencies = { 'nl-lint': args[2].slice('nl-lint@'.length) }
+      writeFileSync('package.json', JSON.stringify(pkg))
+    `)
+    for (const [index, manager, hint, ancestor] of [
+      [0, 'npm', { packageManager: 'npm@11.6.2' }, false],
+      [1, 'pnpm', { packageManager: 'pnpm@11.24.0' }, false],
+      [2, 'yarn', { packageManager: 'yarn@4.0.0' }, false],
+      [3, 'bun', { packageManager: 'bun@1.0.0' }, false],
+      [4, 'pnpm', 'pnpm-lock.yaml', false],
+      [5, 'yarn', 'yarn.lock', false],
+      [6, 'bun', 'bun.lock', false],
+      [7, 'pnpm', { packageManager: 'pnpm@11.24.0' }, true],
+      [8, 'pnpm', 'pnpm-lock.yaml', true],
+    ]) {
+      const parent = join(cwd, String(index))
+      const project = ancestor ? join(parent, 'child') : parent
+      await mkdir(project, { recursive: true })
+      await writeFile(join(parent, 'package.json'), JSON.stringify(typeof hint === 'string' ? {} : hint))
+      if (typeof hint === 'string') await writeFile(join(parent, hint), '')
+      if (ancestor) await writeFile(join(project, 'package.json'), '{}')
+      const result = spawnSync(process.execPath, [cli, 'init'], {
+        cwd: project, encoding: 'utf8',
+        env: { ...process.env, npm_execpath: fakeManager, npm_config_user_agent: `${manager}/1.0.0` },
+      })
+      assert.equal(result.status, 0, result.stderr)
+      const args = JSON.parse(await readFile(join(project, 'install-args.json'), 'utf8'))
+      assert.equal(args[0], manager === 'npm' ? 'install' : 'add')
+      assert.equal(args[1], manager === 'npm' ? '--save-dev' : '-D')
+      assert.match(args[2], /^nl-lint@/)
+      assert.ok(result.stdout.includes(`${manager} run lint:nl`))
+    }
+    const launched = join(cwd, 'launched-by-npm')
+    const bin = join(cwd, 'bin')
+    await mkdir(launched)
+    await mkdir(bin)
+    await writeFile(join(launched, 'package.json'), '{"packageManager":"pnpm@11.24.0"}')
+    await writeFile(join(bin, 'pnpm'), `#!${process.execPath}\n${await readFile(fakeManager, 'utf8')}`)
+    await chmod(join(bin, 'pnpm'), 0o755)
+    const wrongNpm = join(cwd, 'wrong-npm.mjs')
+    await writeFile(wrongNpm, 'throw new Error("Must not run npm in a pnpm project")')
+    const launchedResult = spawnSync(process.execPath, [cli, 'init'], {
+      cwd: launched, encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`,
+        npm_execpath: wrongNpm, npm_config_user_agent: 'npm/11.6.2' },
+    })
+    assert.equal(launchedResult.status, 0, launchedResult.stderr)
+    assert.equal(JSON.parse(await readFile(join(launched, 'install-args.json'), 'utf8'))[0], 'add')
+
+    const invalid = join(cwd, 'invalid')
+    await mkdir(invalid)
+    await writeFile(join(invalid, 'package.json'), '{}')
+    await writeFile(join(invalid, 'pnpm-lock.yaml'), '')
+    await writeFile(join(invalid, 'package-lock.json'), '{}')
+    const run = () => spawnSync(process.execPath, [cli, 'init'], { cwd: invalid, encoding: 'utf8' })
+    assert.match(run().stderr, /Multiple package-manager lockfiles/)
+    await writeFile(join(invalid, 'package.json'), '{"packageManager":"unknown@1"}')
+    assert.match(run().stderr, /Unsupported packageManager/)
+    await writeFile(join(invalid, 'package.json'), '{"packageManager":"npm@11","scripts":null}')
+    assert.match(run().stderr, /scripts must be an object/)
+    assert.deepEqual((await readdir(invalid)).sort(), ['package-lock.json', 'package.json', 'pnpm-lock.yaml'])
   } finally { await rm(cwd, { recursive: true, force: true }) }
 })

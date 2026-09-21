@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFile, execFileSync } from 'node:child_process'
+import { createServer } from 'node:http'
+import { promisify } from 'node:util'
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -19,6 +21,36 @@ try {
   const expected = ['LICENSE', 'README.md', 'package.json', 'examples/nl-lint.config.mjs',
     'src/cache.mjs', 'src/cli.mjs', 'src/config.mjs', 'src/files.mjs', 'src/index.d.ts', 'src/index.mjs', 'src/init.mjs']
   assert.deepEqual(packed.files.map(file => file.path).sort(), expected.sort())
+  // Exercise npx-style setup with no local dependency, using only a loopback registry.
+  const fresh = join(temporary, 'fresh')
+  await mkdir(fresh)
+  await writeFile(join(fresh, 'package.json'), '{"name":"fresh-consumer","private":true}')
+  const tarball = await readFile(join(temporary, packed.filename))
+  const packageMetadata = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
+  const registry = createServer((request, response) => {
+    if (request.url === '/nl-lint.tgz') return response.end(tarball)
+    response.setHeader('content-type', 'application/json')
+    response.end(JSON.stringify({ name: 'nl-lint', 'dist-tags': { latest: packageMetadata.version },
+      versions: { [packageMetadata.version]: { ...packageMetadata,
+        dist: { tarball: `http://127.0.0.1:${registry.address().port}/nl-lint.tgz`, integrity: packed.integrity } } } }))
+  })
+  await new Promise((resolve, reject) => { registry.once('error', reject); registry.listen(0, '127.0.0.1', resolve) })
+  try {
+    const args = ['exec', '--yes', '--package=nl-lint@latest', '--', 'nl-lint', 'init']
+    const result = await promisify(execFile)(process.env.npm_execpath ? process.execPath : 'npm',
+      process.env.npm_execpath ? [process.env.npm_execpath, ...args] : args,
+      { cwd: fresh, env: { ...env, npm_config_registry: `http://127.0.0.1:${registry.address().port}`,
+        npm_config_audit: 'false', npm_config_fund: 'false', npm_config_fetch_retries: '0' } })
+    assert.match(result.stdout, /Ready\./)
+    const freshPackage = JSON.parse(await readFile(join(fresh, 'package.json'), 'utf8'))
+    assert.ok(freshPackage.devDependencies['nl-lint'].includes(packageMetadata.version))
+    assert.equal(freshPackage.scripts['lint:nl'], 'nl-lint src')
+    assert.match(await readFile(join(fresh, 'nl-lint.config.mjs'), 'utf8'), /useful_comments/)
+    assert.equal(await readFile(join(fresh, '.gitignore'), 'utf8'), '.cache/nl-lint/\n')
+    assert.equal(JSON.parse(await readFile(join(fresh, 'node_modules/nl-lint/package.json'), 'utf8')).version, packageMetadata.version)
+  } finally {
+    await new Promise(resolve => registry.close(resolve))
+  }
   await mkdir(consumer)
   await writeFile(join(consumer, 'package.json'), JSON.stringify({ name: 'nl-lint-consumer', private: true, type: 'module' }))
   npm(['install', '--ignore-scripts', '--offline', '--no-audit', '--no-fund', join(temporary, packed.filename)])

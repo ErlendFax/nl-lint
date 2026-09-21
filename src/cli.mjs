@@ -19,7 +19,7 @@ async function findConfig(explicit) {
       if (explicit) throw new Error(`Config not found: ${path}. Create it or use --config with an existing file.`)
     }
     const parent = dirname(directory)
-    if (parent === directory) throw new Error('No nl-lint.config.mjs found. Create one in your project or select a file with --config path.')
+    if (parent === directory) throw new Error('No nl-lint.config.mjs found. Create one with npx nl-lint@latest init or select a file with --config path.')
     directory = parent
   }
 }
@@ -40,7 +40,7 @@ function resultKind(result) {
 async function main() {
   const args = process.argv.slice(2)
   if (!args.length || args.includes('--help')) {
-    console.log('Usage: nl-lint init | <file/folder> [...] | --diff[=ref]\nOptions: --config path (otherwise nearest ancestor nl-lint.config.mjs), --json, --verbose, --refresh, --no-cache, --version\ninit installs and configures nl-lint in the current npm project.\nCLI selects JS/TS source. Folder scans and --diff require Git.\nExit: 0 threshold passed (may need review), 1 rule failure, 2 operational/config error.\nUncached source files are sent to TypeSafe. Set TYPESAFE_API_KEY.')
+    console.log('Usage: nl-lint init | <file/folder> [...] | --diff[=ref]\nOptions: --config path (otherwise nearest ancestor nl-lint.config.mjs), --json, --verbose, --refresh, --no-cache, --version\ninit installs and configures nl-lint in the current project using its package manager.\nCLI selects JS/TS source. Folder scans and --diff require Git.\nExit: 0 threshold passed (may need review), 1 rule failure, 2 operational/config error.\nUncached source files are sent to TypeSafe. Set TYPESAFE_API_KEY.')
     return
   }
   if (args.length === 1 && args[0] === '--version') {

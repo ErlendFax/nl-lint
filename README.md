@@ -16,13 +16,17 @@ nl-lint is a Node.js 22+ package with no runtime dependencies using external dec
 
 ## Quickstart
 
-Initialize nl-lint from your project root:
+Initialize nl-lint from your project root (with an existing `package.json`):
 
 ```sh
-npx nl-lint init
+npx nl-lint@latest init
 ```
 
 This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`.
+
+Use `@latest` for setup so an older local version does not handle `init`. For a pnpm project, you can also run `pnpm dlx nl-lint@latest init`.
+
+The initializer selects the package manager from `packageManager` in `package.json`, otherwise a lockfile, checking the current directory and then its parents. It supports npm, pnpm, Yarn, and Bun, and defaults to npm if no project hint exists. Multiple lockfile formats in the same directory require an explicit `packageManager`. The selected manager must be installed. Existing rules and `lint:nl` scripts are preserved; existing dependency versions are kept.
 
 Edit the generated rules:
 
@@ -41,6 +45,8 @@ For manual setup, install the package and copy the example:
 npm install --save-dev nl-lint
 cp node_modules/nl-lint/examples/nl-lint.config.mjs nl-lint.config.mjs
 ```
+
+In a pnpm project, use `pnpm add -D nl-lint@latest` instead of `npm install`. Use your project's package manager consistently.
 
 Only rules in your config are enabled; `init` starts it with the example rule above. Get an API key from the [TypeSafe dashboard](https://console.typesafe.ai/keys), then export it in your shell:
 
@@ -66,6 +72,8 @@ Run it from your project:
 npm run lint:nl
 ```
 
+For pnpm, use `pnpm run lint:nl` (likewise `yarn run` or `bun run`). The generated script targets `src`; change it to your source folder or individual JS/TS files. Folder scans require a Git repository.
+
 Example output for a passing file:
 
 ```text
@@ -74,6 +82,12 @@ PASS src/example.ts
 ```
 
 `FAIL` means a rule reached its failure threshold. `REVIEW` means the model selected a violation below that threshold or lacked enough context. Review results are counted separately and can still exit 0. Use `--verbose` to inspect each rule's probabilities.
+
+## Setup troubleshooting
+
+If `init` reports “No nl-lint.config.mjs found”, check `npx nl-lint --version` and rerun `npx nl-lint@latest init`. Older CLI versions can interpret `init` as a file to lint.
+
+If `npm install` fails with `Cannot read properties of null (reading 'matches')`, check whether the project uses pnpm. npm can fail while traversing an existing pnpm dependency tree. For pnpm projects, use `pnpm add -D nl-lint@latest` followed by `pnpm exec nl-lint init`. This is an installer failure before nl-lint runs; creating a config does not fix it.
 
 ## CLI
 

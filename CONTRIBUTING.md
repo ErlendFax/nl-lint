@@ -7,14 +7,14 @@ npm ci
 npm run check
 ```
 
-`check` runs typechecks, offline tests, and an installed-tarball smoke check. The smoke check uses a temporary consumer, validates the published file list, and exercises the API, CLI, types, example config, and license. It removes its temporary files afterward. `npm publish` runs the same checks through `prepublishOnly`.
+`check` runs typechecks, offline tests, and an installed-tarball smoke check. The smoke check verifies first-run setup through a loopback-only npm registry (no external network), then uses a temporary consumer, validates the published file list, and exercises the API, CLI, types, example config, and license. It removes its temporary files afterward. `npm publish` runs the same checks through `prepublishOnly`.
 
 ## Structure
 
 - `src/index.mjs`: single-file evaluation and reports; public API exports.
 - `src/config.mjs`: shared rule and option validation.
 - `src/cli.mjs`: arguments, config discovery, output, and exit codes.
-- `src/init.mjs`: npm project installation and idempotent setup.
+- `src/init.mjs`: package-manager-aware project installation and idempotent setup.
 - `src/files.mjs`: explicit inputs and Git-aware file discovery.
 - `src/cache.mjs`: response validation and cache storage.
 - `src/index.d.ts`: public types. Keep these aligned with runtime behavior.

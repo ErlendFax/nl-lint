@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
-import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { access, readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 
 const cacheIgnore = '.cache/nl-lint/'
 const scriptName = 'lint:nl'
@@ -28,14 +28,44 @@ function hasDependency(pkg, name) {
     .some(field => Object.hasOwn(pkg[field] ?? {}, name))
 }
 
-async function installPackage(directory, name, version) {
+async function packageManager(directory) {
+  const lockfiles = { npm: ['package-lock.json', 'npm-shrinkwrap.json'], pnpm: ['pnpm-lock.yaml'], yarn: ['yarn.lock'], bun: ['bun.lock', 'bun.lockb'] }
+  while (true) {
+    let pkg = {}
+    try { pkg = (await readPackage(join(directory, 'package.json'))).value } catch (error) {
+      if (!error.message.startsWith('No package.json found.')) throw error
+    }
+    if (pkg.packageManager !== undefined) {
+      const manager = typeof pkg.packageManager === 'string' ? pkg.packageManager.split('@')[0] : ''
+      if (!Object.hasOwn(lockfiles, manager)) throw new Error('Unsupported packageManager. Use npm, pnpm, yarn, or bun.')
+      return manager
+    }
+    const found = []
+    for (const [manager, files] of Object.entries(lockfiles)) {
+      for (const file of files) {
+        try { await access(join(directory, file)); found.push(manager); break } catch (error) {
+          if (error.code !== 'ENOENT') throw error
+        }
+      }
+    }
+    if (found.length > 1) throw new Error('Multiple package-manager lockfiles found. Set packageManager in package.json before running init.')
+    if (found.length === 1) return found[0]
+    const parent = dirname(directory)
+    if (parent === directory) return 'npm'
+    directory = parent
+  }
+}
+
+async function installPackage(directory, name, version, manager) {
   console.log(`Installing ${name}@${version} as a dev dependency...`)
-  const args = ['install', '--save-dev', `${name}@${version}`]
-  const result = process.env.npm_execpath
-    ? spawnSync(process.execPath, [process.env.npm_execpath, ...args], { cwd: directory, stdio: 'inherit' })
-    : spawnSync('npm', args, { cwd: directory, stdio: 'inherit' })
-  if (result.error) throw result.error
-  if (result.status !== 0) throw new Error(`npm install failed${result.signal ? ` with signal ${result.signal}` : ` with exit code ${result.status}`}.`)
+  const args = [manager === 'npm' ? 'install' : 'add', manager === 'npm' ? '--save-dev' : '-D', `${name}@${version}`]
+  const launcher = process.env.npm_config_user_agent?.split('/')[0] ?? 'npm'
+  const executable = process.env.npm_execpath && launcher === manager ? process.env.npm_execpath : manager
+  const result = /\.[cm]?js$/.test(executable)
+    ? spawnSync(process.execPath, [executable, ...args], { cwd: directory, stdio: 'inherit' })
+    : spawnSync(executable, args, { cwd: directory, stdio: 'inherit' })
+  if (result.error) throw new Error(`Could not run ${manager}: ${result.error.message}. Install the project's package manager and retry init.`)
+  if (result.status !== 0) throw new Error(`${manager} ${args[0]} failed${result.signal ? ` with signal ${result.signal}` : ` with exit code ${result.status}`}.`)
 }
 
 function formatPackage(source, pkg) {
@@ -47,9 +77,14 @@ export async function initialize(directory = process.cwd()) {
   const packagePath = join(directory, 'package.json')
   let packageFile = await readPackage(packagePath)
   const ownPackage = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+  const manager = await packageManager(directory)
+
+  if (packageFile.value.scripts !== undefined && (!packageFile.value.scripts || typeof packageFile.value.scripts !== 'object' || Array.isArray(packageFile.value.scripts))) {
+    throw new Error('package.json scripts must be an object.')
+  }
 
   if (!hasDependency(packageFile.value, ownPackage.name)) {
-    await installPackage(directory, ownPackage.name, ownPackage.version)
+    await installPackage(directory, ownPackage.name, ownPackage.version, manager)
     packageFile = await readPackage(packagePath)
   } else {
     console.log(`${ownPackage.name} is already a project dependency.`)
@@ -94,5 +129,5 @@ export async function initialize(directory = process.cwd()) {
     console.log(`Added ${cacheIgnore} to .gitignore.`)
   }
 
-  console.log('Ready. Edit nl-lint.config.mjs, set TYPESAFE_API_KEY, then run npm run lint:nl.')
+  console.log(`Ready. Edit nl-lint.config.mjs, set TYPESAFE_API_KEY, then run ${manager} run lint:nl.`)
 }
