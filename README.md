@@ -6,9 +6,9 @@ https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c
 
 Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code:
 
-• Is this diff bloated?
-• Is this component hard to read?
-• Are the comments useful?
+- Is this diff bloated?
+- Is this component hard to read?
+- Are the comments useful?
 
 nl-lint is a Node.js 22+ package with no runtime dependencies using external decision AI ([Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) for natural-language rule evaluation.
 
