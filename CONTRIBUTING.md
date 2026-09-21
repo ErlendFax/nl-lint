@@ -24,29 +24,6 @@ npm run check
 
 Add focused regression tests for fixes. Check code, types, README, and examples for drift after changes. Preserve exit codes and machine-readable JSON. CI runs the offline checks on macOS and Linux with Node 22.0.0 and 24; it does not use API credentials.
 
-## Release
-
-Publishing a non-prerelease GitHub Release runs `.github/workflows/release.yml`. The workflow checks that the release tag matches the version in `package.json`, installs from the lockfile, runs the full check, and publishes to npm.
-
-Before the first automated release, configure an npm trusted publisher for package `nl-lint`:
-
-- Provider: GitHub Actions
-- Organization or user: `ErlendFax`
-- Repository: `nl-lint`
-- Workflow filename: `release.yml`
-- Environment: none
-- Allowed action: publish
-
-Trusted publishing requires no npm token and adds provenance automatically. Then release a new version:
-
-```sh
-npm version minor
-git push origin main --follow-tags
-gh release create v0.2.0 --generate-notes
-```
-
-Use the version produced by `npm version` in the final command. Wait for the normal CI checks before creating the GitHub Release. Publishing the release is the deliberate deployment approval; pushing `main` or a tag alone never publishes to npm.
-
 ## Optional live check
 
 ```sh
