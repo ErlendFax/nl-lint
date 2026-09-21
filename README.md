@@ -2,11 +2,13 @@
 
 Near-instant natural-language lint for your code.
 
-A another tool in a the AI guardrail toolbox.
-
 [![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
 
 _The rule used in the video above is: "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses and tool directives."_
+
+## Why
+
+We are all going hands off more and more. This is a tool in a the AI guardrail toolbox.
 
 Sometimes, mechanical lint rules cannot answer the questions you need to ask about your code:
 
