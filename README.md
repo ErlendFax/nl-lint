@@ -4,8 +4,6 @@ Near-instant natural-language lint for your code.
 
 [![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
 
-_The rule used in the video above is: "Comments in `source` must add information beyond the adjacent code. Preserve explanations of intent, documentation, licenses, and tool directives."_
-
 ## Why
 
 We are all becoming increasingly hands-off. This is a tool in the AI guardrail toolbox.
@@ -15,8 +13,6 @@ Sometimes, mechanical lint rules cannot answer the questions you need to ask abo
 - Is this diff bloated?
 - Is this component hard to read?
 - Are the comments useful?
-
-nl-lint is a Node.js 22+ package with no runtime dependencies. It uses external decision AI ([Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)) to evaluate natural-language rules.
 
 ## Quickstart
 
