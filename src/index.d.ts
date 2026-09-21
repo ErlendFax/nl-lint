@@ -49,6 +49,7 @@ export interface Config {
 export interface Result {
   id: string
   title: string
+  question: string | string[]
   message: string
   threshold: number
   failed: boolean

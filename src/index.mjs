@@ -21,7 +21,7 @@ export async function lintSource({ file, source, ...config } = {}) {
   const results = compiled.map(rule => {
     const answer = result.answers[rule.id]
     const failed = answer.probabilities.violation >= rule.threshold
-    return { id: rule.id, title: rule.title, message: rule.message, threshold: rule.threshold,
+    return { id: rule.id, title: rule.title, question: rule.question.instructions.slice(0, -1), message: rule.message, threshold: rule.threshold,
       failed, choice: answer.choice, probabilities: answer.probabilities,
       ...(answer.confidence === undefined ? {} : { confidence: answer.confidence }) }
   })

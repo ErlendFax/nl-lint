@@ -26,6 +26,17 @@ async function findConfig(explicit) {
 
 const needsReview = result => !result.failed && result.choice !== 'pass'
 
+const symbols = { pass: '✓', review: '◇', fail: '✗' }
+const colors = { reset: '\x1b[0m', dim: '\x1b[2m', green: '\x1b[32m', yellow: '\x1b[33m', red: '\x1b[31m' }
+
+function paint(value, color, enabled) {
+  return enabled ? `${colors[color]}${value}${colors.reset}` : value
+}
+
+function resultKind(result) {
+  return result.failed ? 'fail' : result.choice === 'pass' ? 'pass' : 'review'
+}
+
 async function main() {
   const args = process.argv.slice(2)
   if (!args.length || args.includes('--help')) {
@@ -61,9 +72,10 @@ async function main() {
   prepareConfig(options)
   const reports = []
   const selected = await collectFiles(files)
+  const useColor = Boolean(process.stdout.isTTY)
   for (const [index, file] of selected.entries()) {
     if (!flags.has('--json') && (process.stderr.isTTY || flags.has('--verbose'))) {
-      console.error(`Checking ${index + 1}/${selected.length}: ${file}`)
+      console.error(paint(`  ${symbols.review} Checking ${index + 1}/${selected.length}: ${file}`, 'dim', process.stderr.isTTY))
     }
     reports.push(await lintSource({ ...options, file, source: await readFile(file, 'utf8') }))
   }
@@ -72,14 +84,22 @@ async function main() {
   else {
     for (const report of reports) {
       const status = !report.passed ? 'FAIL' : report.results.some(needsReview) ? 'REVIEW' : 'PASS'
-      console.log(`${status} ${report.file}${report.cached ? ' (cached)' : ''}`)
+      const kind = status === 'FAIL' ? 'fail' : status === 'PASS' ? 'pass' : 'review'
+      console.log(`${paint(status, kind === 'fail' ? 'red' : kind === 'pass' ? 'green' : 'yellow', useColor)} ${report.file}${report.cached ? paint(' (cached)', 'dim', useColor) : ''}`)
+      if (flags.has('--verbose')) console.log('')
       for (const r of report.results) {
         if (flags.has('--verbose') || r.failed || r.choice !== 'pass') {
-          console.log(`  ${r.failed ? 'FAIL' : r.choice === 'pass' ? 'PASS' : 'REVIEW'} ${r.title}: ${r.choice}; P(violation)=${r.probabilities.violation}, threshold=${r.threshold}`)
+          const resultStatus = r.failed ? 'FAIL' : r.choice === 'pass' ? 'PASS' : 'REVIEW'
+          const resultColor = resultKind(r) === 'fail' ? 'red' : resultKind(r) === 'pass' ? 'green' : 'yellow'
+          console.log(`  ${paint(symbols[resultKind(r)], resultColor, useColor)} ${paint(resultStatus, resultColor, useColor)}  ${r.title}`)
+          const question = Array.isArray(r.question) ? r.question.join(' ') : r.question
+          console.log(`    question: ${question}`)
+          console.log(`    choice: ${r.choice}  ·  P(violation): ${r.probabilities.violation}  ·  threshold: ${r.threshold}`)
           if (r.failed) console.log(`    ${r.message}`)
-          if (flags.has('--verbose')) console.log(`    ${JSON.stringify(r.probabilities)}`)
+          if (flags.has('--verbose')) console.log(`    probabilities: ${JSON.stringify(r.probabilities)}`)
         }
       }
+      if (flags.has('--verbose')) console.log('')
     }
     const results = reports.flatMap(report => report.results)
     console.log(`${reports.length} ${reports.length === 1 ? 'file' : 'files'}; ${results.filter(r => r.failed).length} rule failures; ${results.filter(needsReview).length} need review; ${passed ? 'passed' : 'failed'} thresholds.`)
