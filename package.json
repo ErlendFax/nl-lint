@@ -1,6 +1,6 @@
 {
   "name": "nl-lint",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Use natural language to lint source code",
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
     }
   },
   "bin": {
-    "nl-lint": "./src/cli.mjs"
+    "nl-lint": "src/cli.mjs"
   },
   "files": [
     "src",

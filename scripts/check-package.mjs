@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const temporary = await mkdtemp(join(tmpdir(), 'nl-lint-package-'))
 const consumer = join(temporary, 'consumer')
-const env = { ...process.env, TYPESAFE_API_KEY: '', TYPESAFE_MODEL: '', npm_config_cache: join(temporary, 'npm-cache') }
+const env = { ...process.env, TYPESAFE_API_KEY: '', TYPESAFE_MODEL: '', npm_config_dry_run: 'false', npm_config_cache: join(temporary, 'npm-cache') }
 const run = (command, args, cwd = consumer) => execFileSync(command, args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 const npm = (args, cwd) => process.env.npm_execpath
   ? run(process.execPath, [process.env.npm_execpath, ...args], cwd)
