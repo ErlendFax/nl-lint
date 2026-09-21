@@ -22,10 +22,6 @@ npx nl-lint@latest init
 
 This installs nl-lint as a dev dependency, creates `nl-lint.config.mjs`, adds the `lint:nl` package script, and adds `.cache/nl-lint/` to `.gitignore`.
 
-Use `@latest` for setup so an older local version does not handle `init`. For a pnpm project, you can also run `pnpm dlx nl-lint@latest init`.
-
-The initializer selects the package manager from `packageManager` in `package.json`, otherwise a lockfile, checking the current directory and then its parents. It supports npm, pnpm, Yarn, and Bun, and defaults to npm if no project hint exists. Multiple lockfile formats in the same directory require an explicit `packageManager`. The selected manager must be installed. Existing rules and `lint:nl` scripts are preserved; existing dependency versions are kept.
-
 Edit the generated rules:
 
 ```js
