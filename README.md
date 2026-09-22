@@ -2,7 +2,9 @@
 
 Near-instant natural-language lint for your code.
 
-[![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)](https://github.com/user-attachments/assets/d9b00c56-4a1e-4a71-842b-5144c748572c)
+![Watch the nl-lint demo](https://raw.githubusercontent.com/ErlendFax/nl-lint/main/demo.gif)
+
+_The demo shows nl-lint using a natural language prompt to check if a code comment is useful. At first, it's not... but after deleting the comment, it passes._
 
 ## Why
 
