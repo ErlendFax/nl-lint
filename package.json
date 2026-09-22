@@ -1,6 +1,6 @@
 {
   "name": "nl-lint",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Use natural language to lint source code",
   "repository": {
     "type": "git",
