@@ -14,6 +14,10 @@ Sometimes, mechanical lint rules cannot answer the questions you need to ask abo
 - Is this component hard to read?
 - Are the comments useful?
 
+## How
+
+This package uses an AI classifier, currently supporting only [Jev](https://www.langchain.com/blog/building-a-harness-with-jev), to take text as input (your code), and produce structured decisions as output (your rules).
+
 ## Quickstart
 
 1. Initialize nl-lint from your project root:
